@@ -16,13 +16,13 @@ type JsonArray = I.JsonArray
 
 type JsonString = I.JsonString
 
+type JsonNumber = I.JsonNumber
+
+type JsonBool = I.JsonBool
+
 type MethodMap = I.MethodMap
 
 type Array = I.Array
-
-type Params = I.Params
-
-type Response = I.Response
 
 run :: MethodMap
     -> Maybe (forall a . Array (IO a) -> IO (Array a))
@@ -30,7 +30,9 @@ run :: MethodMap
     -> IO Json
 run = D.run
 
-fromList :: [(JsonString, Params -> IO Response)] -> MethodMap
+fromList
+  :: [(JsonString, Either JsonArray JsonObject -> IO (Either (CustomError JsonString JsonObject) Json))]
+  -> MethodMap
 fromList = I.buildMethodMap
 
 valueToJson :: Value -> Json
@@ -51,8 +53,9 @@ arrayToVector = I.arrayToVector
 vectorToArray :: Vector a -> Array a
 vectorToArray = I.vectorToArray
 
-sequenceStrategy :: Array (IO a) -> IO (Array a)
-sequenceStrategy = I.sequenceStrategy
-
-makeMethod :: ToMethod f JsonArray JsonObject JsonString Json IO => f -> Params -> IO Response
+makeMethod
+  :: ToMethod f JsonArray JsonObject JsonString Json IO
+  => f
+  -> Either JsonArray JsonObject
+  -> IO (Either (CustomError JsonString JsonObject) Json)
 makeMethod = I.makeMethod

@@ -54,7 +54,7 @@ library
 
 executable example
     import:           warnings, extensions
-    build-depends:    jrpc, jrpc:types, vector, text, aeson, base ^>=4.16.4.0
+    build-depends:    jrpc, vector, text, aeson, base ^>=4.16.4.0
     main-is:          Main.hs
     hs-source-dirs:   app
 

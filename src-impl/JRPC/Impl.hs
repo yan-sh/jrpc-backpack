@@ -35,10 +35,6 @@ newtype JsonNumber = JsonNumber Scientific
 
 newtype JsonBool = JsonBool Bool
 
-type Params = Either JsonArray JsonObject
-
-type Response = Either (CustomError JsonString JsonObject) Json
-
 consumeJson 
   :: Json
   -> (JsonObject -> a)
@@ -75,7 +71,7 @@ getMethod (JsonObject x) = do
     String s -> pure (coerce s)
     _ -> Nothing
 
-getParams :: JsonObject -> Maybe Params
+getParams :: JsonObject -> Maybe (Either JsonArray JsonObject)
 getParams (JsonObject x) = do
   KM.lookup "params" x >>= \case
     A.Array a -> pure (Left $ coerce a)
@@ -103,14 +99,18 @@ mkJsonRpcResult id_ res = Json $ object
     "result" .= coerce @_ @Value res
   ]
 
-newtype MethodMap = MethodMap (HM.HashMap JsonString (Params -> M Response))
+newtype MethodMap = MethodMap
+  (HM.HashMap JsonString (Either JsonArray JsonObject -> M (Either (CustomError JsonString JsonObject) Json)))
 
-newtype MethodPair = MethodPair (JsonString, Params -> M Response)
-
-buildMethodMap :: [(JsonString, Params -> M Response)] -> MethodMap
+buildMethodMap
+  :: [(JsonString, Either JsonArray JsonObject -> M (Either (CustomError JsonString JsonObject) Json))]
+  -> MethodMap
 buildMethodMap = coerce . HM.fromList
 
-lookupMethodMap :: JsonString -> MethodMap -> Maybe (Params -> M Response)
+lookupMethodMap
+  :: JsonString
+  -> MethodMap
+  -> Maybe (Either JsonArray JsonObject -> M (Either (CustomError JsonString JsonObject) Json))
 lookupMethodMap s m = HM.lookup s (coerce m)
 
 sequenceStrategy :: forall a . Array (M a) -> M (Array a)
@@ -131,7 +131,11 @@ arrayToVector = coerce
 vectorToArray :: Vector a -> Array a
 vectorToArray = coerce
 
-makeMethod :: ToMethod f JsonArray JsonObject JsonString Json M => f -> Params -> M Response
+makeMethod
+  :: ToMethod f JsonArray JsonObject JsonString Json M
+  => f
+  -> Either JsonArray JsonObject
+  -> M (Either (CustomError JsonString JsonObject) Json)
 makeMethod = mkMethod
   do JsonString . pack
   do \(JsonString s) (JsonObject o) -> coerce (KM.lookup (K.fromText s) o)

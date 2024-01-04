@@ -21,9 +21,6 @@ data JsonRpcError n =
 
 newtype Named (name :: Symbol) a = Named a
 
-named :: forall n a . a -> Named n a
-named = Named
-
 class ToMethod f array object string json m where
   mkMethod
     :: (String -> string)
