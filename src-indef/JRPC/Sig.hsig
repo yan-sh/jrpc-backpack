@@ -1,0 +1,80 @@
+{-# LANGUAGE KindSignatures #-}
+
+signature JRPC.Sig where
+
+import Data.Kind
+import Data.String
+import JRPC.Types
+
+type Response = Either (CustomError JsonString JsonObject) Json
+
+type Params = Either JsonArray JsonObject
+
+data M :: Type -> Type
+
+instance Functor M
+instance Applicative M
+instance Monad M
+
+
+
+data Array :: Type -> Type
+
+instance Functor Array
+
+
+data Json :: Type
+
+data JsonObject :: Type
+
+data JsonArray :: Type
+
+data JsonString :: Type
+
+instance IsString JsonString
+
+data JsonNumber :: Type
+
+data JsonBool :: Type
+
+consumeJson 
+  :: Json
+  -> (JsonObject -> a)
+  -> (JsonArray -> a)
+  -> (JsonString -> a)
+  -> (JsonNumber -> a)
+  -> (JsonBool -> a)
+  -> a
+  -> a
+
+jsonArrayToArrayOfJson :: JsonArray -> Array Json
+
+arrayOfJsonToJsonArray :: Array Json -> JsonArray
+
+getId :: JsonObject -> Maybe JsonNumber
+
+getMethod :: JsonObject -> Maybe JsonString
+
+getParams :: JsonObject -> Maybe Params
+
+jsonArrayToJson :: JsonArray -> Json
+
+
+
+mkJsonRpcError :: Maybe JsonNumber -> JsonString -> Maybe JsonObject -> Json
+
+mkJsonRpcResult :: JsonNumber -> Json -> Json
+
+
+
+data MethodMap :: Type
+
+data MethodPair :: Type
+
+buildMethodMap :: [(JsonString, Params -> M Response)] -> MethodMap
+
+lookupMethodMap :: JsonString -> MethodMap -> Maybe (Params -> M Response)
+
+
+
+sequenceStrategy :: Array (M a) -> M (Array a)

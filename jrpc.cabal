@@ -1,0 +1,61 @@
+cabal-version:      3.4
+name:               jrpc
+version:            0.1.0.0
+-- synopsis:
+-- description:
+license:            MIT
+license-file:       LICENSE
+author:             Yan Shkurinsky
+maintainer:         yan.shkurinsky@gmail.com
+-- copyright:
+category:           Network
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+-- extra-source-files:
+
+common extensions
+    default-extensions: ViewPatterns LambdaCase BlockArguments OverloadedStrings ImpredicativeTypes DerivingVia
+
+common warnings
+    ghc-options: -Wall
+
+library types
+    import:           warnings
+    exposed-modules:  JRPC.Types
+    build-depends:    ghc-prim, base ^>=4.16.4.0
+    hs-source-dirs:   src-types
+    default-language: GHC2021
+
+library indef
+    import:           warnings, extensions
+    exposed-modules:  JRPC.Indef
+    build-depends:    jrpc:types, base ^>=4.16.4.0
+    hs-source-dirs:   src-indef
+    default-language: GHC2021
+    signatures:       JRPC.Sig
+
+library impl
+    import:           warnings, extensions
+    exposed-modules:  JRPC.Impl
+    build-depends:    jrpc:types, vector, aeson, text, scientific, unordered-containers, hashable, base ^>=4.16.4.0
+    hs-source-dirs:   src-impl
+    default-language: GHC2021
+
+library
+    import:           warnings, extensions
+    exposed-modules:  JRPC
+    other-modules:    JRPC.Internal
+    -- other-extensions:
+    build-depends:    jrpc:types, jrpc:indef, jrpc:impl, aeson, vector, base ^>=4.16.4.0
+    hs-source-dirs:   src
+    default-language: GHC2021
+    mixins:
+      jrpc:indef(JRPC.Indef as JRPC.Def) requires (JRPC.Sig as JRPC.Impl)
+
+executable example
+    import:           warnings, extensions
+    build-depends:    jrpc, jrpc:types, vector, text, aeson, base ^>=4.16.4.0
+    main-is:          Main.hs
+    hs-source-dirs:   app
+
+  
